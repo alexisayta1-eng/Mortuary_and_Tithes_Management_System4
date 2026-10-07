@@ -565,7 +565,7 @@ function initApp() {
     if (selectSecretaryBtn) {
         selectSecretaryBtn.onclick = function(e) {
             if (e) e.preventDefault();
-            loginAsSecretaryDirect();
+            selectLoginRoleState("Secretary");
         };
     }
 
@@ -573,7 +573,7 @@ function initApp() {
     if (selectLeaderBtn) {
         selectLeaderBtn.onclick = function(e) {
             if (e) e.preventDefault();
-            showLeaderGskPicker();
+            selectLoginRoleState("GskLeader");
         };
     }
 

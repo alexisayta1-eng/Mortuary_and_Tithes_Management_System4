@@ -2146,12 +2146,6 @@ body[data-role="Secretary"] .leader-only {
             if (role === 'Parishioner') {
                 return window.loginAsParishionerDirect();
             }
-            if (role === 'Secretary') {
-                return window.loginAsSecretaryDirect();
-            }
-            if (role === 'GskLeader') {
-                return window.showLeaderGskPicker();
-            }
             if (typeof selectLoginRoleState === 'function' && window.selectLoginRoleState !== arguments.callee) {
                 return selectLoginRoleState(role);
             }
@@ -3935,11 +3929,11 @@ body[data-role="Secretary"] .leader-only {
             <div class="role-selection-wrapper">
                 <span class="role-select-title">Select User Role</span>
 
-                <button type="button" class="btn btn-role" id="select-role-secretary" onclick="loginAsSecretaryDirect()">
+                <button type="button" class="btn btn-role" id="select-role-secretary" onclick="selectLoginRoleState('Secretary')">
                     <span class="role-label">SECRETARY</span>
                 </button>
                 
-                <button type="button" class="btn btn-role" id="select-role-leader" onclick="showLeaderGskPicker()">
+                <button type="button" class="btn btn-role" id="select-role-leader" onclick="selectLoginRoleState('GskLeader')">
                     <span class="role-label">GSK LEADER</span>
                 </button>
                 
