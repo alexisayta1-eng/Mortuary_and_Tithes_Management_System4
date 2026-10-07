@@ -1,0 +1,16 @@
+# Render Infrastructure as Code Blueprint
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Static Site Deployment (Free, Instant, Zero Server Overhead)
+  - type: web
+    name: fatima-parish-system
+    env: static
+    buildCommand: ""
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: "*"
+
