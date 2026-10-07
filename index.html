@@ -1994,6 +1994,114 @@ body[data-role="Secretary"] .leader-only {
         };
         document.addEventListener('DOMContentLoaded', window.applyParishLogos);
 
+        window.loginAsSecretaryDirect = function() {
+            var session = {
+                email: "secretary.fatimaparish@gmail.com",
+                username: "sec_juan",
+                name: "Juan Dela Cruz (Secretary)",
+                role: "Secretary",
+                assignedGsk: "All"
+            };
+            localStorage.setItem("GskActiveSession", JSON.stringify(session));
+            localStorage.setItem("GskActiveUser", session.username);
+            document.body.setAttribute("data-role", "Secretary");
+            document.body.removeAttribute("data-gsk");
+
+            var loginOverlay = document.getElementById("login-overlay");
+            if (loginOverlay) {
+                loginOverlay.style.display = "none";
+                loginOverlay.style.visibility = "hidden";
+                loginOverlay.style.opacity = "0";
+            }
+            var appContainer = document.querySelector(".app-container");
+            if (appContainer) {
+                appContainer.style.display = "flex";
+            }
+            var activeUserNameEl = document.getElementById("active-user-name");
+            if (activeUserNameEl) {
+                activeUserNameEl.innerText = session.name;
+            }
+            if (typeof window.addSystemLog === "function") {
+                window.addSystemLog("LOGIN", "SETTINGS", session.name + " logged in", session.username);
+            }
+            if (typeof window.showToast === "function") {
+                window.showToast("Welcome back, Secretary!");
+            }
+            if (typeof window.initApp === "function") {
+                window.initApp();
+            }
+            if (typeof window.switchSection === "function") {
+                window.switchSection("view-tithes-members");
+            }
+            window.applyParishLogos();
+            return false;
+        };
+
+        window.loginAsLeaderDirect = function(gskName) {
+            gskName = gskName || "GSK San Jose";
+            var num = "1";
+            var email = "gsk.sanjose@gmail.com";
+            if (gskName.indexOf("Santa") !== -1 || gskName.indexOf("Maria") !== -1) { num = "2"; email = "gsk.santamaria@gmail.com"; }
+            else if (gskName.indexOf("Pedro") !== -1) { num = "3"; email = "gsk.sanpedro@gmail.com"; }
+            else if (gskName.indexOf("Rosario") !== -1) { num = "4"; email = "gsk.santorosario@gmail.com"; }
+
+            var session = {
+                email: email,
+                username: "gsk_leader_" + num,
+                name: "GSK Leader (" + gskName.replace("GSK ", "") + ")",
+                role: "GskLeader",
+                assignedGsk: gskName
+            };
+            localStorage.setItem("GskActiveSession", JSON.stringify(session));
+            localStorage.setItem("GskActiveUser", session.username);
+            document.body.setAttribute("data-role", "GskLeader");
+            document.body.setAttribute("data-gsk", gskName);
+
+            var loginOverlay = document.getElementById("login-overlay");
+            if (loginOverlay) {
+                loginOverlay.style.display = "none";
+                loginOverlay.style.visibility = "hidden";
+                loginOverlay.style.opacity = "0";
+            }
+            var appContainer = document.querySelector(".app-container");
+            if (appContainer) {
+                appContainer.style.display = "flex";
+            }
+            var activeUserNameEl = document.getElementById("active-user-name");
+            if (activeUserNameEl) {
+                activeUserNameEl.innerText = session.name;
+            }
+            if (typeof window.addSystemLog === "function") {
+                window.addSystemLog("LOGIN", "SETTINGS", session.name + " logged in", session.username);
+            }
+            if (typeof window.showToast === "function") {
+                window.showToast("Welcome, " + session.name + "!");
+            }
+            if (typeof window.initApp === "function") {
+                window.initApp();
+            }
+            if (typeof window.switchSection === "function") {
+                window.switchSection("view-tithes-records-leader");
+            }
+            window.applyParishLogos();
+            return false;
+        };
+
+        window.showLeaderGskPicker = function() {
+            var roleCard = document.getElementById("login-role-card");
+            var gskCard = document.getElementById("login-gsk-picker-card");
+            var credCard = document.getElementById("login-credentials-card");
+            if (roleCard) roleCard.style.display = "none";
+            if (credCard) credCard.style.display = "none";
+            if (gskCard) {
+                gskCard.style.display = "flex";
+                gskCard.style.visibility = "visible";
+                gskCard.style.opacity = "1";
+            }
+            window.safeLucideIcons();
+            window.applyParishLogos();
+        };
+
         window.loginAsParishionerDirect = function() {
             var session = {
                 email: "parishioner@fatimaparish.org",
@@ -2038,11 +2146,18 @@ body[data-role="Secretary"] .leader-only {
             if (role === 'Parishioner') {
                 return window.loginAsParishionerDirect();
             }
+            if (role === 'Secretary') {
+                return window.loginAsSecretaryDirect();
+            }
+            if (role === 'GskLeader') {
+                return window.showLeaderGskPicker();
+            }
             if (typeof selectLoginRoleState === 'function' && window.selectLoginRoleState !== arguments.callee) {
                 return selectLoginRoleState(role);
             }
             var roleCard = document.getElementById('login-role-card');
             var credCard = document.getElementById('login-credentials-card');
+            var gskCard = document.getElementById('login-gsk-picker-card');
             var credTitle = document.getElementById('cred-card-title');
             var emailGroup = document.getElementById('login-email-group');
             var nameGroup = document.getElementById('login-name-group');
@@ -2054,14 +2169,12 @@ body[data-role="Secretary"] .leader-only {
             var contactInput = document.getElementById('login-contact');
 
             if (roleCard) roleCard.style.display = 'none';
+            if (gskCard) gskCard.style.display = 'none';
             if (credCard) {
                 credCard.style.display = 'flex';
                 credCard.style.visibility = 'visible';
                 credCard.style.opacity = '1';
             }
-            var hintUser = document.getElementById('login-hint-user');
-            var hintPass = document.getElementById('login-hint-pass');
-            var leaderPills = document.getElementById('gsk-leader-quick-pick');
 
             if (role === 'Secretary') {
                 if (emailGroup) emailGroup.style.display = 'flex';
@@ -2104,12 +2217,14 @@ body[data-role="Secretary"] .leader-only {
         window.resetLoginOverlay = function() {
             window.selectedLoginRole = '';
             var roleCard = document.getElementById('login-role-card');
+            var gskCard = document.getElementById('login-gsk-picker-card');
             var credCard = document.getElementById('login-credentials-card');
             if (roleCard) {
                 roleCard.style.display = 'flex';
                 roleCard.style.visibility = 'visible';
                 roleCard.style.opacity = '1';
             }
+            if (gskCard) gskCard.style.display = 'none';
             if (credCard) credCard.style.display = 'none';
             window.safeLucideIcons();
             window.applyParishLogos();
@@ -3820,11 +3935,11 @@ body[data-role="Secretary"] .leader-only {
             <div class="role-selection-wrapper">
                 <span class="role-select-title">Select User Role</span>
 
-                <button type="button" class="btn btn-role" id="select-role-secretary" onclick="selectLoginRoleState('Secretary')">
+                <button type="button" class="btn btn-role" id="select-role-secretary" onclick="loginAsSecretaryDirect()">
                     <span class="role-label">SECRETARY</span>
                 </button>
                 
-                <button type="button" class="btn btn-role" id="select-role-leader" onclick="selectLoginRoleState('GskLeader')">
+                <button type="button" class="btn btn-role" id="select-role-leader" onclick="showLeaderGskPicker()">
                     <span class="role-label">GSK LEADER</span>
                 </button>
                 
@@ -3840,7 +3955,40 @@ body[data-role="Secretary"] .leader-only {
             </div>
         </div>
 
-        <!-- STEP 2: Credential Form Card (Secretary & GSK Leader) -->
+        <!-- STEP 2: GSK Leader Community Picker Card (1-Click Direct Access) -->
+        <div class="login-card" id="login-gsk-picker-card" style="display: none;">
+            <div class="login-header" style="position: relative;">
+                <button type="button" class="btn-back" onclick="resetLoginOverlay()" title="Go Back">
+                    <i data-lucide="arrow-left"></i>
+                </button>
+                <img src="./assets/logo.jpg" alt="Fatima Parish Logo" class="login-logo" onerror="if(window.PARISH_LOGO) this.src=window.PARISH_LOGO;">
+                <h2 style="margin-top: 10px;">GSK LEADER</h2>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Choose your assigned GSK Community</p>
+            </div>
+            
+            <div class="role-selection-wrapper" style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" class="btn btn-role" onclick="loginAsLeaderDirect('GSK San Jose')">
+                    <span class="role-label">GSK San Jose</span>
+                </button>
+                <button type="button" class="btn btn-role" onclick="loginAsLeaderDirect('GSK Santa Maria')">
+                    <span class="role-label">GSK Santa Maria</span>
+                </button>
+                <button type="button" class="btn btn-role" onclick="loginAsLeaderDirect('GSK San Pedro')">
+                    <span class="role-label">GSK San Pedro</span>
+                </button>
+                <button type="button" class="btn btn-role" onclick="loginAsLeaderDirect('GSK Santo Rosario')">
+                    <span class="role-label">GSK Santo Rosario</span>
+                </button>
+            </div>
+
+            <div class="login-card-footer" style="margin-top: 16px;">
+                <button type="button" class="btn btn-secondary" onclick="resetLoginOverlay()" style="width: 100%;">
+                    <i data-lucide="arrow-left"></i> Back to Roles
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Credential Form Card (Fallback) -->
         <div class="login-card" id="login-credentials-card" style="display: none;">
             <div class="login-header" style="position: relative;">
                 <button type="button" class="btn-back" id="login-back-btn" onclick="resetLoginOverlay()" title="Go Back">

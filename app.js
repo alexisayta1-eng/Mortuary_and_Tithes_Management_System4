@@ -1,23 +1,98 @@
-// app.js - Routing, Theme Controller, Dialog Manager & Global Aggregators
+function loginAsSecretaryDirect() {
+    const session = {
+        email: "secretary.fatimaparish@gmail.com",
+        username: "sec_juan",
+        name: "Juan Dela Cruz (Secretary)",
+        role: "Secretary",
+        assignedGsk: "All"
+    };
+    localStorage.setItem("GskActiveSession", JSON.stringify(session));
+    localStorage.setItem("GskActiveUser", session.username);
+    document.body.setAttribute("data-role", "Secretary");
+    document.body.removeAttribute("data-gsk");
 
-// Global Chart References
-let dashboardCollectionsChart = null;
-let selectedLoginRole = "";
-
-// Global Helper to safely call lucide.createIcons without throwing
-function safeLucideIcons() {
-    try {
-        if (window.lucide && typeof window.lucide.createIcons === "function") {
-            window.lucide.createIcons();
-        }
-    } catch (e) {
-        console.warn("Lucide render notice:", e);
+    const loginOverlay = document.getElementById("login-overlay");
+    if (loginOverlay) {
+        loginOverlay.style.display = "none";
+        loginOverlay.style.visibility = "hidden";
+        loginOverlay.style.opacity = "0";
     }
+    const appContainer = document.querySelector(".app-container");
+    if (appContainer) {
+        appContainer.style.display = "flex";
+    }
+    const activeUserNameEl = document.getElementById("active-user-name");
+    if (activeUserNameEl) {
+        activeUserNameEl.innerText = session.name;
+    }
+    addSystemLog("LOGIN", "SETTINGS", `${session.name} logged in`, session.username);
+    showToast("Welcome back, Secretary!");
+    initApp();
+    switchSection("view-tithes-members");
+    applyParishLogos();
+    return false;
 }
-window.safeLucideIcons = safeLucideIcons;
+
+function loginAsLeaderDirect(gskName) {
+    gskName = gskName || "GSK San Jose";
+    let num = "1";
+    let email = "gsk.sanjose@gmail.com";
+    if (gskName.includes("Santa") || gskName.includes("Maria")) { num = "2"; email = "gsk.santamaria@gmail.com"; }
+    else if (gskName.includes("Pedro")) { num = "3"; email = "gsk.sanpedro@gmail.com"; }
+    else if (gskName.includes("Rosario")) { num = "4"; email = "gsk.santorosario@gmail.com"; }
+
+    const session = {
+        email: email,
+        username: `gsk_leader_${num}`,
+        name: `GSK Leader (${gskName.replace("GSK ", "")})`,
+        role: "GskLeader",
+        assignedGsk: gskName
+    };
+    localStorage.setItem("GskActiveSession", JSON.stringify(session));
+    localStorage.setItem("GskActiveUser", session.username);
+    document.body.setAttribute("data-role", "GskLeader");
+    document.body.setAttribute("data-gsk", gskName);
+
+    const loginOverlay = document.getElementById("login-overlay");
+    if (loginOverlay) {
+        loginOverlay.style.display = "none";
+        loginOverlay.style.visibility = "hidden";
+        loginOverlay.style.opacity = "0";
+    }
+    const appContainer = document.querySelector(".app-container");
+    if (appContainer) {
+        appContainer.style.display = "flex";
+    }
+    const activeUserNameEl = document.getElementById("active-user-name");
+    if (activeUserNameEl) {
+        activeUserNameEl.innerText = session.name;
+    }
+    addSystemLog("LOGIN", "SETTINGS", `${session.name} logged in`, session.username);
+    showToast(`Welcome, ${session.name}!`);
+    initApp();
+    switchSection("view-tithes-records-leader");
+    applyParishLogos();
+    return false;
+}
+
+function showLeaderGskPicker() {
+    const roleCard = document.getElementById("login-role-card");
+    const gskCard = document.getElementById("login-gsk-picker-card");
+    if (roleCard) roleCard.style.display = "none";
+    if (gskCard) {
+        gskCard.style.display = "flex";
+        gskCard.style.visibility = "visible";
+        gskCard.style.opacity = "1";
+    }
+    safeLucideIcons();
+    applyParishLogos();
+}
 
 function resetLoginOverlay() {
+    window.selectedLoginRole = "";
+    selectedLoginRole = "";
     const roleCard = document.getElementById("login-role-card");
+    const gskCard = document.getElementById("login-gsk-picker-card");
     const credCard = document.getElementById("login-credentials-card");
     const errorMsg = document.getElementById("login-error-message");
     
@@ -26,12 +101,9 @@ function resetLoginOverlay() {
         roleCard.style.visibility = "visible";
         roleCard.style.opacity = "1";
     }
-    if (credCard) {
-        credCard.style.display = "none";
-    }
-    if (errorMsg) {
-        errorMsg.style.display = "none";
-    }
+    if (gskCard) gskCard.style.display = "none";
+    if (credCard) credCard.style.display = "none";
+    if (errorMsg) errorMsg.style.display = "none";
     
     // Clear credentials form inputs safely
     const emailInput = document.getElementById("login-email");
@@ -51,8 +123,19 @@ function resetLoginOverlay() {
     if (passIcon) passIcon.setAttribute("data-lucide", "eye");
     
     safeLucideIcons();
-    selectedLoginRole = "";
+    applyParishLogos();
 }
+
+window.loginAsSecretaryDirect = loginAsSecretaryDirect;
+window.loginAsLeaderDirect = loginAsLeaderDirect;
+window.showLeaderGskPicker = showLeaderGskPicker;
+window.resetLoginOverlay = resetLoginOverlay;
+
+// app.js - Routing, Theme Controller, Dialog Manager & Global Aggregators
+
+// Global Chart References
+let dashboardCollectionsChart = null;
+let selectedLoginRole = "";
 
 function loginAsParishionerDirect() {
     const session = {
@@ -482,7 +565,7 @@ function initApp() {
     if (selectSecretaryBtn) {
         selectSecretaryBtn.onclick = function(e) {
             if (e) e.preventDefault();
-            selectLoginRoleState("Secretary");
+            loginAsSecretaryDirect();
         };
     }
 
@@ -490,7 +573,7 @@ function initApp() {
     if (selectLeaderBtn) {
         selectLeaderBtn.onclick = function(e) {
             if (e) e.preventDefault();
-            selectLoginRoleState("GskLeader");
+            showLeaderGskPicker();
         };
     }
 
@@ -498,7 +581,7 @@ function initApp() {
     if (selectParishionerBtn) {
         selectParishionerBtn.onclick = function(e) {
             if (e) e.preventDefault();
-            selectLoginRoleState("Parishioner");
+            loginAsParishionerDirect();
         };
     }
 
@@ -1092,7 +1175,7 @@ function renderDashboardCollectionsChart(tithes, mortuaryContributions) {
             labels: months,
             datasets: [
                 {
-                    label: 'Tithes Collections (₱)',
+                    label: 'Tithes Collections (â‚±)',
                     data: titheData,
                     backgroundColor: 'rgba(99, 102, 241, 0.75)', // Indigo
                     borderColor: 'rgb(99, 102, 241)',
@@ -1100,7 +1183,7 @@ function renderDashboardCollectionsChart(tithes, mortuaryContributions) {
                     borderRadius: 4
                 },
                 {
-                    label: 'Mortuary Collections (₱)',
+                    label: 'Mortuary Collections (â‚±)',
                     data: mortuaryData,
                     backgroundColor: 'rgba(16, 185, 129, 0.75)', // Emerald
                     borderColor: 'rgb(16, 185, 129)',
@@ -1610,10 +1693,10 @@ function openSecretaryPrintModal() {
         
         if (typeSelect) {
             typeSelect.innerHTML = `
-                <option value="leader-financial-records">📑 Official GSK Financial Records (Tithes & Mortuary)</option>
-                <option value="leader-members-directory">👥 Official GSK Members Directory & Status</option>
-                <option value="leader-contributions-ledger">💰 Official GSK Submission History & Verification Ledger</option>
-                <option value="current-view">🖨️ Print Current Active Screen / Table</option>
+                <option value="leader-financial-records">ðŸ“‘ Official GSK Financial Records (Tithes & Mortuary)</option>
+                <option value="leader-members-directory">ðŸ‘¥ Official GSK Members Directory & Status</option>
+                <option value="leader-contributions-ledger">ðŸ’° Official GSK Submission History & Verification Ledger</option>
+                <option value="current-view">ðŸ–¨ï¸ Print Current Active Screen / Table</option>
             `;
         }
 
@@ -1640,11 +1723,11 @@ function openSecretaryPrintModal() {
 
         if (typeSelect) {
             typeSelect.innerHTML = `
-                <option value="financial-allocation">📑 Official Financial Allocation Statement (GSK 20%, Chapel 20%, Parish 60%)</option>
-                <option value="members-directory">👥 GSK Members Official Directory & Status</option>
-                <option value="contributions-ledger">💰 Tithes & Mortuary Contributions Ledger</option>
-                <option value="chapel-expenses">⛪ Chapel Maintenance & Expenses Statement</option>
-                <option value="current-view">🖨️ Print Current Active Screen / Table</option>
+                <option value="financial-allocation">ðŸ“‘ Official Financial Allocation Statement (GSK 20%, Chapel 20%, Parish 60%)</option>
+                <option value="members-directory">ðŸ‘¥ GSK Members Official Directory & Status</option>
+                <option value="contributions-ledger">ðŸ’° Tithes & Mortuary Contributions Ledger</option>
+                <option value="chapel-expenses">â›ª Chapel Maintenance & Expenses Statement</option>
+                <option value="current-view">ðŸ–¨ï¸ Print Current Active Screen / Table</option>
             `;
         }
 
